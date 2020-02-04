@@ -6,3 +6,10 @@ file '/tmp/sai' do
     open(path).read.include? "file"
   end
 end
+
+
+git '/tmp/couch' do
+  repository 'git://github.com/saikrishnacapg/chef-repo.git'
+  revision 'master'
+  action :sync
+end
