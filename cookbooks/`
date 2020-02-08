@@ -1,0 +1,47 @@
+require 'base64'
+require "net/http"
+require "uri"
+require 'restclient'
+
+  uuidList = fetchUUID("eng2")
+  parsed = JSON.parse(File.read("/tmp/release.json"))
+
+
+  runlist = parsed["run_list"][0]
+  pp runlist
+  assetList = assetList(runlist)
+  processList = processList(runlist)
+  dependencyMap = parsed["DependencyDefinition"]["DependencyMap"]
+  dependentList=Hash.new
+  dependentList=dependencyList(assetList,dependentList)
+  dependentList=updateDependencyList(dependencyMap,runlist,dependentList)
+  pp runlist
+  executionOrder=executionOrder(dependentList,assetList)
+
+  Chef::Log.info "Processing Json #{assetList}\n"
+  Chef::Log.info "Processing Json #{processList}\n"
+  Chef::Log.info "DependencyList #{dependentList}\n"
+  Chef::Log.info "List of UUID #{uuidList}\n"
+
+  printExecutionOrder(executionOrder,dependentList)
+  Chef::Log.info "============================"
+  Chef::Log.info "Dependency Map for Reference"
+  Chef::Log.info "============================"
+  dependentList.keys.each do |key|
+     Chef::Log.info "#{key} is dependent on completion of #{dependentList[key]}"
+  end
+  spinner=[]
+  spinner[0]=spinnerCircle
+  spinner[1]=spinnerLines
+  spinner[2]=spinnerLines
+  spinner[3]=spinnerLines
+
+  count=0
+  while count<50
+     printf("\rCreating Execution Tree from the asset List %s",spinner[0].next)
+     sleep(0.1)
+     count+=1
+  end
+  puts
+  
+  createExecutionHash(dependentList,assetList,processList,executionOrder) 
