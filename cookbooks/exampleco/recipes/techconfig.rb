@@ -5,7 +5,7 @@ require 'restclient'
 
   uuidList = fetchUUID("eng2")
   parsed = JSON.parse(File.read("/tmp/test1.json"))
-
+#  parsed = JSON.parse(File.read("/tmp/release.json"))
 
   runlist = parsed["run_list"][0]
   pp runlist
@@ -17,7 +17,7 @@ require 'restclient'
   dependentList=updateDependencyList(dependencyMap,runlist,dependentList)
   pp runlist
   firstExecuteList=executionOrder(dependentList,assetList)
-
+  #pp firstExecuteList
   Chef::Log.info "Processing Json #{assetList}\n"
   Chef::Log.info "Processing Json #{processList}\n"
   Chef::Log.info "DependencyList #{dependentList}\n"
@@ -38,9 +38,10 @@ require 'restclient'
      sleep(0.1)
      count+=1
   end
-  puts
+  Chef::Log.info
   
   executeDepHash=createExecutionHash(dependentList,processList) 
+  #pp executeDepHash 
   buildExecutionTree(executeDepHash,firstExecuteList,processList) 
   Chef::Log.info "#{firstExecuteList}"
   callCatalogActionUrl="https://ocloud-mintpress.wpdev.mintpress.io/REST/ServiceCatalog/performAction"
@@ -49,17 +50,17 @@ require 'restclient'
   password="Sahasra14$"
   methodData="post"
   firstExecuteList[0].each do |asset|
-     puts "#{asset.split("_")[0]} -> #{asset.split("_")[1]} -> #{uuidList[asset.split("_")[0]]}"
+     Chef::Log.info "#{asset.split("_")[0]} -> #{asset.split("_")[1]} -> #{uuidList[asset.split("_")[0]]}"
      payloadData="{'uuid': #{uuidList[asset.split("_")[0]]}, 'actionCode': #{asset.split("_")[1]}, 'ignoreInitialState': 'false'}"   
      processList[asset]="INPROGRESS"
      response=postRestClient(callCatalogActionUrl,username,password,payloadData,methodData)
-     puts response
+     Chef::Log.info response
   end
   count=0
   buildExecutionTree(executeDepHash,firstExecuteList,processList) 
   t=Array.new
   firstExecuteList[0].each_with_index do |asset,index|
-   t[index]=Thread.new{fetchStatus(uuidList[asset.split("_")[0]],processList,executeDepHash,asset)}
+   t[index]=Thread.new{fetchStatus(uuidList[asset.split("_")[0]],processList,executeDepHash,asset,uuidList,firstExecuteList)}
   end
    t.each do |thread|
     thread.join

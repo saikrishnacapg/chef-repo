@@ -44,8 +44,9 @@ def getRestClient(url,username,password)
   response
 end
 
-def fetchStatus(uuid,processList,executeDepHash,assetName)
+def fetchStatus(uuid,processList,executionDepHash,assetName,uuidList,firstExecuteList)
  fetchCatalogStatusUrl="https://ocloud-mintpress.wpdev.mintpress.io/REST/ServiceCatalog/get?uuid=#{uuid}"
+ callCatalogActionUrl="https://ocloud-mintpress.wpdev.mintpress.io/REST/ServiceCatalog/performAction"
  username="l2007"
  password="Sahasra14$"
  response=getRestClient(fetchCatalogStatusUrl,username,password)
@@ -70,15 +71,35 @@ def fetchStatus(uuid,processList,executeDepHash,assetName)
         parsed=JSON.parse(response)
         currentAIS=parsed["launchDetails"]["providersToServiceCatalogItems"][0]["serviceCatalogItems"][0]["currentActionInvocation"]
       end
-     printf("\r%s Waiting to get the status since %d sec(s) %s",spinner1.next,ticker,spinner.next)
+     printf("\r%s Waiting to get the status of assets with blue circles since %d sec(s) %s",spinner1.next,ticker,spinner.next)
      end
  if parsed["launchDetails"]["providersToServiceCatalogItems"][0]["serviceCatalogItems"][0]["currentActionInvocation"].nil?
    synchronize do
-     puts "In else Block #{processList[assetName]}"
+     Chef::Log.info
+     #Chef::Log.info parsed
+     #Chef::Log.info parsed_bkp
      processList[assetName]="DONE"
-     puts "In else Block #{processList[assetName]}"
-     puts currentAIS 
-     puts parsed_bkp
+     buildExecutionTree(executionDepHash,firstExecuteList,processList)
+     if !executionDepHash[assetName].nil?
+     methodData="post"
+     executionDepHash[assetName].each do |asset|
+      Chef::Log.info "#{asset.split("_")[0]} -> #{asset.split("_")[1]} -> #{uuidList[asset.split("_")[0]]}"
+      payloadData="{'uuid': #{uuidList[asset.split("_")[0]]}, 'actionCode': #{asset.split("_")[1]}, 'ignoreInitialState': 'false'}"
+      processList[asset]="INPROGRESS"
+      response=postRestClient(callCatalogActionUrl,username,password,payloadData,methodData)
+      Chef::Log.info response
+      buildExecutionTree(executionDepHash,firstExecuteList,processList)
+     end
+     end
+     if !executionDepHash[assetName].nil?
+     t=Array.new
+     executionDepHash[assetName].each_with_index do |asset,index|
+      t[index]=Thread.new{fetchStatus(uuidList[asset.split("_")[0]],processList,executionDepHash,asset,uuidList,firstExecuteList)}
+     end
+       t.each do |thread|
+         thread.join
+       end
+     end 
    end
  end
  end
@@ -88,7 +109,7 @@ def fetchCatalogStatus(username,password,uuid)
   count=0
   spinner = spinnerMethod() 
   spinner1 = spinnerMethod() 
-  puts "Entered in to FetchCatalogStaus"
+  Chef::Log.info "Entered in to FetchCatalogStaus"
   uuid="e2686b82-f8d7-436e-b4cc-cfae132d5fa0"
   fetchCatalogStatusUrl="https://ocloud-mintpress.wpdev.mintpress.io/REST/ServiceCatalog/get?uuid=#{uuid}"
   response=getRestClient(fetchCatalogStatusUrl,username,password)

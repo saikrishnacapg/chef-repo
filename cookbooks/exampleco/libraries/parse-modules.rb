@@ -86,8 +86,7 @@ def appendToAsset(assetTree,executionDepHash,assetName,count,processList)
   processingSymbol="🔵"
   failedSymbol="🚫"
   initalStatus="⛔"
-  flower=
-  symbolCount=1
+  symbolCount=0
   if count<1
           if processList[assetName].eql?("USHER")
             assetTree+=pipe+assetName+" "+initalStatus+"\n"
@@ -104,7 +103,6 @@ def appendToAsset(assetTree,executionDepHash,assetName,count,processList)
                 symbol+="━━"
                 symbolCount+=1
         end
-        #puts "#{assetName} #{executionDepHash[assetName].nil?}"
           if processList[assetName].eql?("USHER")
             assetTree+=pipe+symbol+assetName+" "+initalStatus+"\n"
           elsif processList[assetName].eql?("INPROGRESS")
@@ -116,7 +114,7 @@ def appendToAsset(assetTree,executionDepHash,assetName,count,processList)
           end
   end
   count+=1
-  #puts executionDepHash[assetName]
+  #Chef::Log.info "#{assetName} -> #{executionDepHash[assetName]} -> #{count}"
   if !executionDepHash[assetName].nil?
     executionDepHash[assetName].each do |asset|
       assetTree=appendToAsset(assetTree,executionDepHash,asset,count,processList)
@@ -144,8 +142,18 @@ def buildExecutionTree(executionDepHash,firstexecuteList,processList)
   firstexecuteList[0].each do |asset|
     assetTree=appendToAsset(assetTree,executionDepHash,asset,count,processList)
   end
-  puts"======================================"
-  puts"Execution Sequence and Dependency Tree"
-  puts"======================================"
-  puts assetTree
+  processList.keys.each do |key|
+    if processList[key].eql?"USHER"
+      Chef::Log.info "Asset #{processList[key]} is waiting to process"
+    elsif processList[key].eql?"INPROGRESS"
+      Chef::Log.info "Asset #{processList[key]} is in progress "
+    elsif processList[key].eql?"DONE"
+      Chef::Log.info "Asset #{processList[key]} Completed execution"
+    end 
+  end
+
+  Chef::Log.info"======================================"
+  Chef::Log.info"Execution Sequence and Dependency Tree"
+  Chef::Log.info"======================================"
+  Chef::Log.info assetTree
 end
