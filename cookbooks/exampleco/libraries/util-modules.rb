@@ -31,6 +31,9 @@ def fetchUUID(envname)
  uuidList
 end 
 
+def synchronize(&block)
+    Mutex.new.synchronize(&block)
+end
 def postRestClient(url,username,password,payload,method)
   response=RestClient::Request.execute(method: method, user: username, password: password, url: url, payload: payload, headers: {'Content-Type' => 'application/json' })
   response
@@ -39,6 +42,46 @@ end
 def getRestClient(url,username,password)
   response=RestClient::Request.execute(method: :get, user: username, password: password, url: url, payload: {}, headers: {})
   response
+end
+
+def fetchStatus(uuid,processList,executeDepHash,assetName)
+ fetchCatalogStatusUrl="https://ocloud-mintpress.wpdev.mintpress.io/REST/ServiceCatalog/get?uuid=#{uuid}"
+ username="l2007"
+ password="Sahasra14$"
+ response=getRestClient(fetchCatalogStatusUrl,username,password)
+ parsed_bkp=parsed=JSON.parse(response)
+ 
+ spinner=circleAntiClockWise
+ spinner1=circleClockWise
+ count=0
+ ticker=0
+ if !parsed["launchDetails"]["providersToServiceCatalogItems"][0]["serviceCatalogItems"][0]["currentActionInvocation"].nil?
+     while !parsed["launchDetails"]["providersToServiceCatalogItems"][0]["serviceCatalogItems"][0]["currentActionInvocation"].nil? do
+      currentAIS=parsed_bkp["launchDetails"]["providersToServiceCatalogItems"][0]["serviceCatalogItems"][0]["currentActionInvocation"]
+      sleep(0.1)
+      count+=1
+      if(count%10==0)
+         ticker+=1
+      end
+      if(count%100==0)
+        #pp("#{currentAIS["itemCode"]} - #{currentAIS["actionCode"]} is #{currentAIS["actionInvocationState"]}, waiting since #{ticker} secs")
+        response=getRestClient(fetchCatalogStatusUrl,username,password)
+        parsed_bkp=parsed
+        parsed=JSON.parse(response)
+        currentAIS=parsed["launchDetails"]["providersToServiceCatalogItems"][0]["serviceCatalogItems"][0]["currentActionInvocation"]
+      end
+     printf("\r%s Waiting to get the status since %d sec(s) %s",spinner1.next,ticker,spinner.next)
+     end
+ if parsed["launchDetails"]["providersToServiceCatalogItems"][0]["serviceCatalogItems"][0]["currentActionInvocation"].nil?
+   synchronize do
+     puts "In else Block #{processList[assetName]}"
+     processList[assetName]="DONE"
+     puts "In else Block #{processList[assetName]}"
+     puts currentAIS 
+     puts parsed_bkp
+   end
+ end
+ end
 end
 
 def fetchCatalogStatus(username,password,uuid)

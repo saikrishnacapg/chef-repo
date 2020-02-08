@@ -29,10 +29,10 @@ end
 def circleClockWise
 spinner = Enumerator.new do |e|
   loop do
-    e.yield '◒ ◑'
-    e.yield '◐ ◓'
-    e.yield '◓ ◐'
-    e.yield '◑ ◒'
+    e.yield '◒ '
+    e.yield '◐ '
+    e.yield '◓ '
+    e.yield '◑ '
   end
 end
 spinner

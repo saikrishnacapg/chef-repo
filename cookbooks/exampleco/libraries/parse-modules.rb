@@ -119,7 +119,7 @@ def appendToAsset(assetTree,executionDepHash,assetName,count,processList)
   #puts executionDepHash[assetName]
   if !executionDepHash[assetName].nil?
     executionDepHash[assetName].each do |asset|
-      assetTree=appendToAsset(assetTree,executionDepHash,asset,count,false)
+      assetTree=appendToAsset(assetTree,executionDepHash,asset,count,processList)
     end
   end
   assetTree
