@@ -22,7 +22,7 @@ def processList(runlist)
 
  runlist.each do |key,value|
     value["action"].split(",").each do |action|
-       processList["#{key}_#{action}"]=false
+       processList["#{key}_#{action}"]="USHER"
     end
  end
  processList
