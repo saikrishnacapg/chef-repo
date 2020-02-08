@@ -4,7 +4,7 @@ require "uri"
 require 'restclient'
 
   uuidList = fetchUUID("eng2")
-  parsed = JSON.parse(File.read("/tmp/test1.json"))
+  parsed = JSON.parse(File.read("/tmp/release.json"))
 
 
   runlist = parsed["run_list"][0]
@@ -51,8 +51,10 @@ require 'restclient'
   firstExecuteList[0].each do |asset|
      puts "#{asset.split("_")[0]} -> #{asset.split("_")[1]} -> #{uuidList[asset.split("_")[0]]}"
      payloadData="{'uuid': #{uuidList[asset.split("_")[0]]}, 'actionCode': #{asset.split("_")[1]}, 'ignoreInitialState': 'false'}"   
+     processList[asset]="INPROGRESS"
   #   response=postRestClient(callCatalogActionUrl,username,password,payloadData,methodData)
   #   puts response
   end
+  buildExecutionTree(executeDepHash,firstExecuteList,processList)
   firstExecuteList[0].each do |asset|
   end

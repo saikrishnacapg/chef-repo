@@ -84,35 +84,36 @@ def appendToAsset(assetTree,executionDepHash,assetName,count,processList)
   doneSymbol="✅"
   waitSymbol="🌕"
   processingSymbol="🔵"
-  failedSymbol="🔴"
-  unknownStatus="⛔"
+  failedSymbol="🚫"
+  initalStatus="⛔"
   flower=
   symbolCount=1
   if count<1
-         if processList[assetName].eql?"DONE"
-         assetTree+=pipe+assetName+" "+doneSymbol+"\n"
-         else if processList[assetName].eql?"USHER"
-          assetTree+=pipe+assetName+" "+waitSymbol+"\n"
-         else if processList[assetName].eql?"PROGRESSING"
-          assetTree+=pipe+assetName+" "+processingSymbol+"\n"
-         else 
-          assetTree+=pipe+assetName+" "+failedSymbol+"\n"
-         end
+          if processList[assetName].eql?("USHER")
+            assetTree+=pipe+assetName+" "+initalStatus+"\n"
+          elsif processList[assetName].eql?("INPROGRESS")
+	    assetTree+=pipe+assetName+" "+processingSymbol+"\n"
+          elsif processList[assetName].eql?("FAILED")
+            assetTree+=pipe+assetName+" "+failedSymbol+"\n"
+          elsif processList[assetName].eql?("DONE")
+            assetTree+=pipe+assetName+" "+doneSymbol+"\n"
+          end 
+          
   else
         while symbolCount<count-1
                 symbol+="━━"
                 symbolCount+=1
         end
         #puts "#{assetName} #{executionDepHash[assetName].nil?}"
-           if processList[assetName].eql?"DONE"
-         assetTree+=pipe+symbol+assetName+" "+doneSymbol+"\n"
-         else if processList[assetName].eql?"USHER"
-          assetTree+=pipe+symbol+assetName+" "+waitSymbol+"\n"
-         else if processList[assetName].eql?"PROGRESSING"
-          assetTree+=pipe+symbol+assetName+" "+processingSymbol+"\n"
-         else 
-          assetTree+=pipe+symbol+assetName+" "+failedSymbol+"\n"
-         end
+          if processList[assetName].eql?("USHER")
+            assetTree+=pipe+symbol+assetName+" "+initalStatus+"\n"
+          elsif processList[assetName].eql?("INPROGRESS")
+            assetTree+=pipe+symbol+assetName+" "+processingSymbol+"\n"
+          elsif processList[assetName].eql?("FAILED")
+            assetTree+=pipe+symbol+assetName+" "+failedSymbol+"\n"
+          elsif processList[assetName].eql?("DONE")
+            assetTree+=pipe+symbol+assetName+" "+doneSymbol+"\n"
+          end
   end
   count+=1
   #puts executionDepHash[assetName]
